@@ -16,4 +16,8 @@
     <ProjectReference Include="./../WeatherSimulator.Proto/WeatherSimulator.Proto.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Protobuf Include="./../WeatherSimulator.Proto/WeatherSimulatorService.proto" GrpcServices="Server" />
+  </ItemGroup>
+
 </Project>

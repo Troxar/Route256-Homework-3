@@ -1,12 +1,11 @@
+using Grpc.Core;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Google.Protobuf.WellKnownTypes;
-using Grpc.Core;
-using Microsoft.Extensions.Logging;
 using WeatherSimulator.Proto;
 using WeatherSimulator.Server.Models;
 using WeatherSimulator.Server.Services.Abstractions;
@@ -29,7 +28,6 @@ public class WeatherSimulatorService : WeatherSimulatorServiceBase
 
     public override async Task GetSensorsStream(IAsyncStreamReader<ToServerMessage> requestStream, IServerStreamWriter<SensorData> responseStream, ServerCallContext context)
     {
-
         await ProceedMessage(requestStream, responseStream, context.CancellationToken);
     }
 
@@ -41,11 +39,10 @@ public class WeatherSimulatorService : WeatherSimulatorServiceBase
         while (await requestStream.MoveNext() && !cancellationToken.IsCancellationRequested)
         {
             var current = requestStream.Current;
-            if(current.SubscribeSensorsIds is not null) 
+            if (current.SubscribeSensorsIds is not null)
                 Subscribe(responseStream, sensorSubscriptionIds, cancellationToken, current);
 
-
-            if(current.UnsubscribeSensorsIds is not null) 
+            if (current.UnsubscribeSensorsIds is not null)
                 Unsubscribe(sensorSubscriptionIds, current);
         }
     }
@@ -73,10 +70,9 @@ public class WeatherSimulatorService : WeatherSimulatorServiceBase
         foreach (var id in current.UnsubscribeSensorsIds)
         {
             if (!Guid.TryParse(id, out var tempId) ||
-                !sensorSubscriptionIds.TryGetValue(tempId, out Guid subscriptionId)) 
+                !sensorSubscriptionIds.TryGetValue(tempId, out Guid subscriptionId))
                 continue;
-            
-            
+
             _measureService.UnsubscribeFromMeasures(tempId, subscriptionId);
             sensorSubscriptionIds.Remove(tempId, out _);
             _logger.LogDebug("Unsubscribed!");
@@ -93,5 +89,32 @@ public class WeatherSimulatorService : WeatherSimulatorServiceBase
             Co2 = measure.CO2,
             LocationType = (Proto.SensorLocationType)measure.LocationType
         }, cancellationToken);
+    }
+
+    public override Task<SensorData> GetLastMeasure(GetLastMeasureRequest request, ServerCallContext context)
+    {
+        var sensor = _measureService
+            .GetAvailableSensors()
+            .FirstOrDefault(sensor => sensor.Id.ToString() == request.SensorId);
+
+        if (sensor is null)
+        {
+            _logger.LogError("Sensor id not found: {sensorId}", request.SensorId);
+            throw new RpcException(new Status(StatusCode.NotFound, $"Sensor id not found: {request.SensorId}"));
+        }
+
+        var randGen = new Random();
+
+        var sensorData = new SensorData
+        {
+            SensorId = sensor.Id.ToString(),
+            Temperature = randGen.Next(200, 320) / 10,
+            Humidity = randGen.Next(40, 60),
+            Co2 = sensor.LocationType == Models.Enums.SensorLocationType.External
+                ? randGen.Next(350, 360)
+                : randGen.Next(400, 600)
+        };
+
+        return Task.FromResult(sensorData);
     }
 }
