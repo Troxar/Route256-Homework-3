@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using WeatherSimulator.Proto;
 using WeatherSimulator.Server.Models;
 using WeatherSimulator.Server.Services.Abstractions;
+using WeatherSimulator.Server.Storages.Abstractions;
 using static WeatherSimulator.Proto.WeatherSimulatorService;
 
 namespace WeatherSimulator.Server.GrpcServices;
@@ -16,13 +17,16 @@ namespace WeatherSimulator.Server.GrpcServices;
 public class WeatherSimulatorService : WeatherSimulatorServiceBase
 {
     private readonly IMeasureService _measureService;
+    private readonly ILastMeasureStore _lastMeasureStore;
     private readonly ILogger<WeatherSimulatorService> _logger;
 
     public WeatherSimulatorService(
         IMeasureService measureService,
+        ILastMeasureStore lastMeasureStore,
         ILogger<WeatherSimulatorService> logger)
     {
         _measureService = measureService;
+        _lastMeasureStore = lastMeasureStore;
         _logger = logger;
     }
 
@@ -93,9 +97,10 @@ public class WeatherSimulatorService : WeatherSimulatorServiceBase
 
     public override Task<SensorData> GetLastMeasure(GetLastMeasureRequest request, ServerCallContext context)
     {
+        var id = new Guid(request.SensorId);
         var sensor = _measureService
             .GetAvailableSensors()
-            .FirstOrDefault(sensor => sensor.Id.ToString() == request.SensorId);
+            .FirstOrDefault(sensor => sensor.Id == id);
 
         if (sensor is null)
         {
@@ -103,18 +108,15 @@ public class WeatherSimulatorService : WeatherSimulatorServiceBase
             throw new RpcException(new Status(StatusCode.NotFound, $"Sensor id not found: {request.SensorId}"));
         }
 
-        var randGen = new Random();
+        var measure = _lastMeasureStore.GetMeasure(id);
 
-        var sensorData = new SensorData
+        if (measure is null)
         {
-            SensorId = sensor.Id.ToString(),
-            Temperature = randGen.Next(200, 320) / 10,
-            Humidity = randGen.Next(40, 60),
-            Co2 = sensor.LocationType == Models.Enums.SensorLocationType.External
-                ? randGen.Next(350, 360)
-                : randGen.Next(400, 600)
-        };
+            _logger.LogError("Last measure not found: {sensorId}", request.SensorId);
+            throw new RpcException(new Status(StatusCode.NotFound, $"Last measure not found: {request.SensorId}"));
+        }
 
+        var sensorData = measure.ToSensorData();
         return Task.FromResult(sensorData);
     }
 }

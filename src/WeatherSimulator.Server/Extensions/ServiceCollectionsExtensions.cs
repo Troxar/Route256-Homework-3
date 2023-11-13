@@ -17,7 +17,8 @@ public static class ServiceCollectionsExtensions
         services.AddHostedService<SensorPoolingService>();
         services.AddSingleton<IMeasureSubscriptionStore, MeasureSubscriptionStore>();
         services.AddSingleton<IMeasureService, MeasureService>();
-        
+        services.AddSingleton<ILastMeasureStore, LastMeasureStore>();
+
         return services;
     }
 }

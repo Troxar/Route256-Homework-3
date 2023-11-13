@@ -1,13 +1,13 @@
 using System;
-using WeatherSimulator.Server.Models.Enums;
+using WeatherSimulator.Proto;
 
 namespace WeatherSimulator.Server.Models;
 
 public class SensorMeasure
 {
     public SensorMeasure(Guid sensorId,
-        double temperature, 
-        int humidity, 
+        double temperature,
+        int humidity,
         int co2)
     {
         SensorId = sensorId;
@@ -31,16 +31,28 @@ public class SensorMeasure
     /// Влажность
     /// </summary>
     public int Humidity { get; private set; }
-    
+
     /// <summary>
     /// Показатель CO2
     /// </summary>
     public int CO2 { get; private set; }
 
-    public SensorLocationType LocationType { get; set; }
+    public Enums.SensorLocationType LocationType { get; private set; }
 
     /// <summary>
     /// Время последнего обновления сенсора
     /// </summary>
     public DateTime LastUpdate { get; private set; }
+
+    public SensorData ToSensorData()
+    {
+        return new SensorData
+        {
+            SensorId = SensorId.ToString(),
+            Temperature = Temperature,
+            Humidity = Humidity,
+            Co2 = CO2,
+            LocationType = (Proto.SensorLocationType)LocationType
+        };
+    }
 }
