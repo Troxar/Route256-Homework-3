@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
 using WeatherSimulator.Client.Configurations;
+using WeatherSimulator.Client.Extensions;
 using WeatherSimulator.Client.Services;
 using WeatherSimulator.Client.Services.Abstractions;
 using WeatherSimulator.Proto;
@@ -48,6 +49,10 @@ public class Startup
             {
                 options.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
             });
+        }
+        else
+        {
+            app.UseCustomExceptionHandler();
         }
 
         app.UseRouting();
