@@ -18,17 +18,17 @@ message SensorData {
   double temperature = 2;
   int32 humidity = 3;
   int32 co2 = 4;
-  SensorLocationType LocationType = 5;
+  SensorLocationType location_type = 5;
 }
 
 message SensorInfo{
   string sensor_id = 1;
-  SensorLocationType LocationType = 2;
+  SensorLocationType location_type = 2;
 }
 
 enum SensorLocationType{
-    Internal = 0;
-    External = 1;
+  Internal = 0;
+  External = 1;
 }
 
 message GetLastMeasureRequest{
