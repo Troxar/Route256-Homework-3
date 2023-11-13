@@ -1,4 +1,7 @@
-﻿namespace WeatherSimulator.Client;
+﻿using WeatherSimulator.Client.Services;
+using WeatherSimulator.Client.Services.Abstractions;
+
+namespace WeatherSimulator.Client;
 
 public class Startup
 {
@@ -13,6 +16,7 @@ public class Startup
     {
         services.AddLogging();
         services.AddControllers();
+        services.AddSingleton<IMeasureGrpcServiceClient, MeasureGrpcServiceClient>();
     }
 
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
