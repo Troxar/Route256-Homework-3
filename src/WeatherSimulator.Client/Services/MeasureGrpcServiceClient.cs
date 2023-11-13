@@ -1,5 +1,4 @@
-﻿using Grpc.Net.Client;
-using WeatherSimulator.Client.Services.Abstractions;
+﻿using WeatherSimulator.Client.Services.Abstractions;
 using WeatherSimulator.Proto;
 
 namespace WeatherSimulator.Client.Services
@@ -8,10 +7,9 @@ namespace WeatherSimulator.Client.Services
     {
         private readonly WeatherSimulatorService.WeatherSimulatorServiceClient _client;
 
-        public MeasureGrpcServiceClient()
+        public MeasureGrpcServiceClient(WeatherSimulatorService.WeatherSimulatorServiceClient client)
         {
-            var channel = GrpcChannel.ForAddress("http://localhost:5082");
-            _client = new WeatherSimulatorService.WeatherSimulatorServiceClient(channel);
+            _client = client;
         }
 
         public async Task<SensorData> GetLastMeasure(string sensorId)
