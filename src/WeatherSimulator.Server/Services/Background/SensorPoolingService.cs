@@ -1,14 +1,13 @@
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using WeatherSimulator.Server.Models;
 using WeatherSimulator.Server.Models.Enums;
 using WeatherSimulator.Server.Services.Abstractions;
-using WeatherSimulator.Server.Storages.Abstractions;
 
 namespace WeatherSimulator.Server.Services.Background;
 
@@ -31,12 +30,12 @@ public class SensorPoolingService : IHostedService, IDisposable
 
         _logger.LogInformation("Старт сервиса, опрашивающего {sensorsCount} сенсоров.", registeredSensors.Length);
 
-        for(var i = 0; i < registeredSensors.Length; i++)
+        for (var i = 0; i < registeredSensors.Length; i++)
         {
             var sensorItem = registeredSensors[i];
-            _timers.Add(new Timer(PoolSensor, 
-                sensorItem, 
-                TimeSpan.Zero, 
+            _timers.Add(new Timer(PoolSensor,
+                sensorItem,
+                TimeSpan.Zero,
                 TimeSpan.FromMilliseconds(sensorItem.PollingFrequency)));
         }
 
@@ -47,14 +46,15 @@ public class SensorPoolingService : IHostedService, IDisposable
     {
         var sensorInfo = state as Sensor;
         var randGen = new Random();
-        
+
         if (sensorInfo == null)
             return;
 
-        var measureInfo = new SensorMeasure(sensorInfo.Id, 
+        var measureInfo = new SensorMeasure(sensorInfo.Id,
             temperature: randGen.Next(200, 320) / 10,
             humidity: randGen.Next(40, 60),
-            co2: sensorInfo.LocationType == SensorLocationType.External ? randGen.Next(350, 360) : randGen.Next(400, 600));
+            co2: sensorInfo.LocationType == SensorLocationType.External ? randGen.Next(350, 360) : randGen.Next(400, 600),
+            locationType: sensorInfo.LocationType);
 
         _measureService.OnNewMeasure(measureInfo);
     }
@@ -63,17 +63,17 @@ public class SensorPoolingService : IHostedService, IDisposable
     {
         _logger.LogInformation("Timed Hosted Service is stopping.");
 
-        foreach(var timer in _timers)
+        foreach (var timer in _timers)
         {
             timer?.Change(Timeout.Infinite, 0);
-        }  
+        }
 
         return Task.CompletedTask;
     }
 
     public void Dispose()
     {
-        foreach(var timer in _timers)
+        foreach (var timer in _timers)
         {
             timer?.Dispose();
         }

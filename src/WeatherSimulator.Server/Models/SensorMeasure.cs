@@ -8,12 +8,14 @@ public class SensorMeasure
     public SensorMeasure(Guid sensorId,
         double temperature,
         int humidity,
-        int co2)
+        int co2,
+        Enums.SensorLocationType locationType)
     {
         SensorId = sensorId;
         Temperature = temperature;
         Humidity = humidity;
         CO2 = co2;
+        LocationType = locationType;
         LastUpdate = DateTime.Now;
     }
 
