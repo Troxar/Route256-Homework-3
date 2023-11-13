@@ -3,7 +3,8 @@ using WeatherSimulator.Client.Services.Abstractions;
 
 namespace WeatherSimulator.Client.Controllers
 {
-    [Route("/sensor")]
+    [ApiController]
+    [Route("api/[controller]")]
     public class SensorController : Controller
     {
         private readonly IMeasureGrpcServiceClient _client;
@@ -13,6 +14,7 @@ namespace WeatherSimulator.Client.Controllers
             _client = client;
         }
 
+        [HttpGet]
         [Route("{id:guid}")]
         public async Task<IActionResult> GetLastMeasure(string id)
         {

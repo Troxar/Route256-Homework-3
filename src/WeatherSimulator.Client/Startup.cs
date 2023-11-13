@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Options;
+using Microsoft.OpenApi.Models;
 using WeatherSimulator.Client.Configurations;
 using WeatherSimulator.Client.Services;
 using WeatherSimulator.Client.Services.Abstractions;
@@ -27,6 +28,14 @@ public class Startup
         services.AddLogging();
         services.AddControllers();
         services.AddSingleton<IMeasureGrpcServiceClient, MeasureGrpcServiceClient>();
+        services.AddSwaggerGen(options =>
+        {
+            options.SwaggerDoc("v1", new OpenApiInfo
+            {
+                Title = "Weather simulator gRPC API",
+                Version = "v1"
+            });
+        });
     }
 
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
@@ -34,6 +43,11 @@ public class Startup
         if (env.IsDevelopment())
         {
             app.UseDeveloperExceptionPage();
+            app.UseSwagger();
+            app.UseSwaggerUI(options =>
+            {
+                options.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
+            });
         }
 
         app.UseRouting();
